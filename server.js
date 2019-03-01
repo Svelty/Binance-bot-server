@@ -11,9 +11,15 @@ app.listen(port, () => console.log(`App listening on port ${port}!`));
 
 // setInterval(() => BinanceService.ping(), 5000); //ping biance server ever 30s
 setInterval( async () => {
-    console.log( await BinanceService.getOrderBook('BTCUSDT', 5));
-    console.log('test');
+    try {
+        console.log( await BinanceService.getHistoricalTrades('BTCUSDT', 15));
+        console.log('test');
+    } catch (error) {
+        throw(error);
+    }
+    
 }, 2000);
+
 setInterval( () => {
     console.log('test2');
 }, 2000);
