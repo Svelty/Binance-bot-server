@@ -15,15 +15,14 @@ const BinanceService = {
         }
         return RequestPromise(options);
     },
-    postRP: (uri, headers, body) => {
+    postFormRP: (uri, form, headers) => {
         const options = {
             method: 'POST',
             uri: uri,
-            body: {
-                some: 'payload'
-            },
-            json: true // Automatically stringifies the body to JSON
+            form: form, //binance requires this to be form not body...
+            headers: headers,
         };
+        console.log(options);
         return RequestPromise(options);
     },
     putRP: (method, url) => {
