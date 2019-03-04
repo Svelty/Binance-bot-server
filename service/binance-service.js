@@ -102,7 +102,6 @@ const BinanceService = {
     },
     getBookTop:(symbol = null) => {//symbol may be omited
         const uri = buildUri(3, 'ticker/bookTicker', {symbol: symbol});
-        // const uri = (symbol) ? buildUri(3, 'ticker/bookTicker', {symbol: symbol}) : buildUri(3, 'ticker/bookTicker');
         return RequestService.getRP(uri, '');
     },
     //Signed and Auth 
