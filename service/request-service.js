@@ -8,9 +8,7 @@ const BinanceService = {
             // qs: {} = {
     
             // },
-            headers: {
-                'User-Agent': 'Request-Promise'
-            },
+            headers: headers,
             json: true,
         }
         return RequestPromise(options);
@@ -22,7 +20,15 @@ const BinanceService = {
             form: form, //binance requires this to be form not body...
             headers: headers,
         };
-        console.log(options);
+        return RequestPromise(options);
+    },
+    postBodyRP: (uri, body, headers) => {
+        const options = {
+            method: 'POST',
+            uri: uri,
+            body: body, 
+            headers: headers,
+        };
         return RequestPromise(options);
     },
     putRP: (method, url) => {

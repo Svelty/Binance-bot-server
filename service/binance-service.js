@@ -3,88 +3,121 @@ const BinanceAuth = require('./../const/binance-auth');
 const crypto = require('crypto');
 
 const baseEndpoint = 'https://api.binance.com'
-const apiV1 = '/api/v1/'
-const apiV3 = '/api/v3/'
 const apiAuth = {
     apiKey: BinanceAuth.apiKey,
     apiSecret: BinanceAuth.apiSecret,
 }
 
-const uriEncoder = function encodeUri( object ) {
+const buildUri = function buildUriString(apiVersion, endPoint, paramObject = null ) {
 
+    let uri = `${baseEndpoint}/api/v${apiVersion}/${endPoint}`;
+
+    if (paramObject) {
+        uri = uri + '?' + buildParamString(paramObject);
+    }
+    return uri;
+}
+const buildParamString = function buildParamString(paramObject) {
+
+    let paramString = '';
+    const keys = Object.keys(paramObject);
+
+    for ( i = 0; i < keys.length; i++ ) {
+        if(paramObject[keys[i]] !== null) {
+            paramString = (paramString === '') ? paramString : paramString + '&';
+            paramString = paramString + keys[i] + '=' + paramObject[keys[i]];
+        }
+    }
+    return paramString
 }
 
 const createSignature = function hmacSig(paramString) {
     return crypto.createHmac('sha256', apiAuth.apiSecret).update(paramString).digest('hex');
-    
 }
 
 const BinanceService = {
     //working unauthenticated calls
     ping:() => {
-        const uri = `${baseEndpoint}${apiV1}ping`
+        const uri = buildUri(1, 'ping');
         return RequestService.getRP(uri, '')
     },
     time:() => {
-        const uri = `${baseEndpoint}${apiV1}time`
+        const uri = buildUri(1, 'time');
         return RequestService.getRP(uri, '');
     },
     exchangeInfo:() => {
-        const uri = `${baseEndpoint}${apiV1}exchangeInfo`
+        const uri = buildUri(1, 'exchangeInfo');
         return RequestService.getRP(uri, '');
     },
-    getOrderBook:(symbol, limit = 100) => { //limits: 5, 10, 20, 50, 100. 500. 1000
-        const uri = `${baseEndpoint}${apiV1}depth?symbol=${symbol}&limit=${limit}`;
+    getOrderBook:(symbol, limit = 10) => { //limits: 5, 10, 20, 50, 100, 500, 1000
+        const params = {
+            symbol: symbol,
+            limit: limit
+        }
+        const uri = buildUri(1, 'depth', params);
         return RequestService.getRP(uri, '');
     },
     getTrades:(symbol, limit) => {//limit max 1000
-        const uri = `${baseEndpoint}${apiV1}trades?symbol=${symbol}&limit=${limit}`;
+        const params = {
+            symbol: symbol,
+            limit: limit
+        }
+        const uri = buildUri(1, 'trades', params);
         return RequestService.getRP(uri, '');
     },
     getAggTrades:(symbol, limit, startTime = null, endTime = null, formId = null) => {//limit: default 500 max 1000 - formId: trade id to fetch from - max 1000
-        let uri = `${baseEndpoint}${apiV1}aggTrades?symbol=${symbol}&limit=${limit}`;//endTime-startTime < 1h
-        uri = formId ? uri + `&formId=${formId}` : uri;
-        uri = startTime ? uri + `&startTime=${startTime}` : uri;
-        uri = endTime ? uri + `&endTime=${endTime}` : uri;
+        const params = {
+            symbol: symbol,
+            limit: limit,
+            startTime: startTime, //endTime-startTime < 1h
+            endTime: endTime,
+            formId: formId
+        }
+        const uri = buildUri(1, 'aggTrades', params);
         return RequestService.getRP(uri, '');
     },
     getKlines:(symbol, interval, limit, startTime = null, endTime = null) => {//limit: default 500 max 1000  intervals: 1m, 3m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1M
-        let uri = `${baseEndpoint}${apiV1}klines?symbol=${symbol}&limit=${limit}`;//endTime-startTime < 1h
-        uri = interval ? uri + `&interval=${interval}` : uri;
-        uri = startTime ? uri + `&startTime=${startTime}` : uri;
-        uri = endTime ? uri + `&endTime=${endTime}` : uri;
+        const params = {
+            symbol: symbol,
+            interval: interval,
+            limit: limit,
+            startTime: startTime, //endTime-startTime < 1h
+            endTime: endTime,
+        }
+        const uri = buildUri(1, 'klines', params);
         return RequestService.getRP(uri, '');
     },
     getAvgPrice:(symbol) => {
-        const uri = `${baseEndpoint}${apiV3}avgPrice?symbol=${symbol}`;
+        const params = {symbol: symbol};
+        const uri = buildUri(3, 'avgPrice', params);
         return RequestService.getRP(uri, '');
     },
-    get24hrTicker:(symbol) => {//symbol may be omited, will return all tickets - care for rate limiting
-        const uri = `${baseEndpoint}${apiV1}ticker/24hr?symbol=${symbol}`;
+    get24hrTicker:(symbol = null) => {//symbol may be omited, will return all tickets - care for rate limiting
+        const uri = buildUri(1, 'ticker/24hr', {symbol: symbol});
         return RequestService.getRP(uri, '');
     },
-    getLastPrice:(symbol) => {//symbol may be omited
-        const uri = `${baseEndpoint}${apiV3}ticker/price?symbol=${symbol}`;
+    getLastPrice:(symbol = null) => {//symbol may be omited
+        const uri = buildUri(3, 'ticker/price', {symbol: symbol});
         return RequestService.getRP(uri, '');
     },
-    getBookTop:(symbol) => {//symbol may be omited
-        const uri = `${baseEndpoint}${apiV3}ticker/bookTicker?symbol=${symbol}`;
+    getBookTop:(symbol = null) => {//symbol may be omited
+        const uri = buildUri(3, 'ticker/bookTicker', {symbol: symbol});
+        // const uri = (symbol) ? buildUri(3, 'ticker/bookTicker', {symbol: symbol}) : buildUri(3, 'ticker/bookTicker');
         return RequestService.getRP(uri, '');
     },
     //Signed and Auth 
-    postOrder:(symbol, side, type, quantity) => {
+    postOrder:(symbol, side, type, quantity) => {//incomplete - needs to handle different order types and optional params
+        const uri = buildUri(3, 'order');
         const timestamp = Date.now();
-        let uri = `${baseEndpoint}${apiV3}order`;
-        const paramString = `symbol=${symbol}&side=${side}&type=${type}&quantity=${quantity}&timestamp=${timestamp}`
         const params = {
             symbol: symbol,
             side: side,
             type: type,
             quantity: quantity,
             timestamp: timestamp,
-            signature: createSignature(paramString)
         };
-        // uri = uri + '?' + paramString + '&signature=' + createSignature(paramString);
+        const paramString = buildParamString(params);
+        params.signature = createSignature(paramString);
         const headers = {
             'X-MBX-APIKEY': apiAuth.apiKey,
         }
