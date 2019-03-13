@@ -8,6 +8,7 @@ const apiAuth = {
     apiSecret: BinanceAuth.apiSecret,
 }
 
+//builds uri string for requests
 const buildUri = function buildUriString(apiVersion, endPoint, paramObject = null ) {
 
     let uri = `${baseEndpoint}/api/v${apiVersion}/${endPoint}`;
@@ -17,6 +18,8 @@ const buildUri = function buildUriString(apiVersion, endPoint, paramObject = nul
     }
     return uri;
 }
+
+//builds a paramater string to use as a query or in hmac signature
 const buildParamString = function buildParamString(paramObject) {
 
     let paramString = '';
@@ -31,6 +34,7 @@ const buildParamString = function buildParamString(paramObject) {
     return paramString
 }
 
+//hash a string of parameters to sign a request
 const createSignature = function hmacSig(paramString) {
     return crypto.createHmac('sha256', apiAuth.apiSecret).update(paramString).digest('hex');
 }
@@ -130,16 +134,17 @@ const BinanceService = {
         return RequestService.getRP(uri, headers);
     },
     //Signed and Auth 
-    postOrder:(symbol, side, type, quantity) => {//incomplete - needs to handle different order types and optional params
+    postMarketOrder:(symbol, side, quantity, newClientOrderId = null) => {
         const uri = buildUri(3, 'order');//can be order/test
         const timestamp = Date.now();
         const params = {
-            symbol: symbol,
-            side: side,
-            type: type,
+            symbol: symbol,             
+            side: side,                 
+            type: 'MARKET',         // type	ENUM	YES // ORDER TYPES: LIMIT, MARKET, STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT, LIMIT_MAKER
             quantity: quantity,
             timestamp: timestamp,
         };
+        if (newClientOrderId) params.newClientOrderId = newClientOrderId;
         const paramString = buildParamString(params);
         params.signature = createSignature(paramString);
         const headers = {
@@ -147,39 +152,80 @@ const BinanceService = {
         };
         return RequestService.postFormRP(uri, params, headers);
     },
-    // ORDER TYPES:
-    // LIMIT
-    // MARKET
-    // STOP_LOSS
-    // STOP_LOSS_LIMIT
-    // TAKE_PROFIT
-    // TAKE_PROFIT_LIMIT
-    // LIMIT_MAKER
-
-    // Time in force (timeInForce):
-    // GTC
-    // IOC
-    // FOK
+    postLimitOrder:(symbol, side, quantity, price, newClientOrderId = null, timeInForce = null) => {//incomplete - needs to handle different order types and optional params
+        const uri = buildUri(3, 'order');//can be order/test
+        const timestamp = Date.now();
+        const params = {
+            symbol: symbol,             // symbol	STRING	YES	
+            side: side,                 // side	ENUM	YES	
+            type: 'LIMIT',                 // type	ENUM	YES // ORDER TYPES: LIMIT, MARKET, STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT, LIMIT_MAKER
+            quantity: quantity,         // quantity	DECIMAL	YES
+            price: price,
+            timeInForce: timeInForce || "GTC",   // timeInForce	ENUM	NO // GTC, IOC, FOK
+            timestamp: timestamp,
+        };
+        if (newClientOrderId) params.newClientOrderId = newClientOrderId; // unique id for the order. Automatically generated if not sent.
+        console.log(params);
+        const paramString = buildParamString(params);
+        console.log(paramString);
+        params.signature = createSignature(paramString);
+        const headers = {
+            'X-MBX-APIKEY': apiAuth.apiKey,
+        };
+        return RequestService.postFormRP(uri, params, headers);
+    },
+    postStopOrder:(symbol, side, quantity, stopPrice, newClientOrderId = null, timeInForce = null) => {//incomplete - needs to handle different order types and optional params
+        const uri = buildUri(3, 'order');//can be order/test
+        const timestamp = Date.now();
+        const params = {
+            symbol: symbol,             // symbol	STRING	YES	
+            side: side,                 // side	ENUM	YES	
+            type: 'STOP_LOSS',                 // type	ENUM	YES // ORDER TYPES: LIMIT, MARKET, STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT, LIMIT_MAKER
+            quantity: quantity,         // quantity	DECIMAL	YES
+            stopPrice: stopPrice,
+            timestamp: timestamp,
+        };
+        if (newClientOrderId) params.newClientOrderId = newClientOrderId; // unique id for the order. Automatically generated if not sent.
+        console.log(params);
+        const paramString = buildParamString(params);
+        console.log(paramString);
+        params.signature = createSignature(paramString);
+        const headers = {
+            'X-MBX-APIKEY': apiAuth.apiKey,
+        };
+        return RequestService.postFormRP(uri, params, headers);
+    },
+    postStopLimitOrder:(symbol, side, quantity, stopPrice, limitPrice, newClientOrderId = null, timeInForce = null) => {//incomplete - needs to handle different order types and optional params
+        const uri = buildUri(3, 'order');//can be order/test
+        const timestamp = Date.now();
+        const params = {
+            symbol: symbol,             // symbol	STRING	YES	
+            side: side,                 // side	ENUM	YES	
+            type: 'STOP_LOSS',                 // type	ENUM	YES // ORDER TYPES: LIMIT, MARKET, STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT, LIMIT_MAKER
+            quantity: quantity,         // quantity	DECIMAL	YES
+            stopPrice: stopPrice,
+            price: limitPrice,
+            timeInForce: timeInForce || "GTC",   // timeInForce	ENUM	NO // GTC, IOC, FOK
+            timestamp: timestamp,
+        };
+        if (newClientOrderId) params.newClientOrderId = newClientOrderId; // unique id for the order. Automatically generated if not sent.
+        console.log(params);
+        const paramString = buildParamString(params);
+        console.log(paramString);
+        params.signature = createSignature(paramString);
+        const headers = {
+            'X-MBX-APIKEY': apiAuth.apiKey,
+        };
+        return RequestService.postFormRP(uri, params, headers);
+    },
     
-    // symbol	STRING	YES	
-    // side	ENUM	YES	
-    // type	ENUM	YES	
-    // timeInForce	ENUM	NO	
-    // quantity	DECIMAL	YES	
-    // price	DECIMAL	NO	
-    // newClientOrderId	STRING	NO	A unique id for the order. Automatically generated if not sent.
     // stopPrice	DECIMAL	NO	Used with STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, and TAKE_PROFIT_LIMIT orders.
     // icebergQty	DECIMAL	NO	Used with LIMIT, STOP_LOSS_LIMIT, and TAKE_PROFIT_LIMIT to create an iceberg order.
     // newOrderRespType	ENUM	NO	Set the response JSON. ACK, RESULT, or FULL; MARKET and LIMIT order types default to FULL, all other orders default to ACK.
     // recvWindow	LONG	NO	
-    // timestamp	LONG	YES	
     // Additional mandatory parameters based on type:
 
     // Type	Additional mandatory parameters
-    // LIMIT	timeInForce, quantity, price
-    // MARKET	quantity
-    // STOP_LOSS	quantity, stopPrice
-    // STOP_LOSS_LIMIT	timeInForce, quantity, price, stopPrice
     // TAKE_PROFIT	quantity, stopPrice
     // TAKE_PROFIT_LIMIT	timeInForce, quantity, price, stopPrice
     // LIMIT_MAKER	quantity, price
@@ -211,9 +257,6 @@ const BinanceService = {
         };
         return RequestService.getRP(uri, headers);
     },
-
-    // GET /api/v3/order (HMAC SHA256)
-    // Check an order's status.
     // Weight: 1
     // Parameters:
     // Name	Type	Mandatory	Description
@@ -228,18 +271,16 @@ const BinanceService = {
     // For some historical orders cummulativeQuoteQty will be < 0, meaning the data is not available at this time.
 
 
-
-
-
     //untested/unfinished
-    cancelOrder:(symbol, orderId) => {
+    cancelOrder:(symbol, orderId = null, origClientOrderId = null) => {
         const uri = buildUri(3, 'order');
         const timestamp = Date.now();
         const params = {
             symbol: symbol,
-            orderId: orderId,
             timestamp: timestamp,
         };
+        if (orderId) params.orderId = orderId;
+        if (origClientOrderId) params.origClientOrderId = origClientOrderId;
         
         const paramString = buildParamString(params);
         uri = uri + paramString + '&' + createSignature(paramString);
@@ -253,10 +294,6 @@ const BinanceService = {
     
     // Weight: 1
     // Parameters:
-    // Name	Type	Mandatory	Description
-    // symbol	STRING	YES	
-    // orderId	LONG	NO	
-    // origClientOrderId	STRING	NO	
     // newClientOrderId	STRING	NO	Used to uniquely identify this cancel. Automatically generated by default.
     // recvWindow	LONG	NO	
     // timestamp	LONG	YES	
@@ -278,9 +315,6 @@ const BinanceService = {
         };
         return RequestService.getRP(uri, headers);
     },
-    // GET /api/v3/openOrders  (HMAC SHA256)
-    // Get all open orders on a symbol. Careful when accessing this with no symbol.
-
     // Weight: 1 for a single symbol; 40 when the symbol parameter is omitted
 
     // Parameters:
@@ -294,12 +328,17 @@ const BinanceService = {
 
 
 
-    getAllOrders:(symbol) => {
+    getAllOrders:(symbol, orderId = null, startTime = null, endTime = null, limit = null, recvWindow = null) => {
         const uri = buildUri(3, 'allOrders');
         const timestamp = Date.now();
         const params = {
-            symbol: symbol,
-            timestamp: timestamp,
+            symbol: symbol, // symbol	STRING	YES
+            orderId: orderId, // orderId	LONG	NO
+            startTime: startTime, // startTime	LONG	NO	
+            endTime: endTime,  // endTime	LONG	NO	
+            limit: limit, // limit	INT	NO	Default 500; max 1000.
+            recvWindow: recvWindow, // recvWindow	LONG	NO	
+            timestamp: timestamp, // timestamp	LONG	YES	
         };
         
         const paramString = buildParamString(params);
@@ -309,34 +348,18 @@ const BinanceService = {
         };
         return RequestService.getRP(uri, headers);
     },
-
-    // GET /api/v3/allOrders (HMAC SHA256)
-    // Get all account orders; active, canceled, or filled.
-
     // Weight: 5 with symbol
-
-    // Parameters:
-
-    // Name	Type	Mandatory	Description
-    // symbol	STRING	YES	
-    // orderId	LONG	NO	
-    // startTime	LONG	NO	
-    // endTime	LONG	NO	
-    // limit	INT	NO	Default 500; max 1000.
-    // recvWindow	LONG	NO	
-    // timestamp	LONG	YES	
-    // Notes:
-
     // If orderId is set, it will get orders >= that orderId. Otherwise most recent orders are returned.
     // For some historical orders cummulativeQuoteQty will be < 0, meaning the data is not available at this time.
 
 
 
 
-    getAccountInfo:() => {
+    getAccountInfo:(recvWindow = null) => {
         const uri = buildUri(3, 'account');
         const timestamp = Date.now();
         const params = {
+            recvWindow: recvWindow,
             timestamp: timestamp,
         };
         
@@ -378,9 +401,6 @@ const BinanceService = {
         };
         return RequestService.getRP(uri, headers);
     },
-    // GET /api/v3/myTrades  (HMAC SHA256)
-    // Get trades for a specific account and symbol.
-    
     // Weight: 5 with symbol
     
     // Parameters:

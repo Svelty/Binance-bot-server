@@ -1,15 +1,11 @@
 const RequestPromise = require('request-promise')
 
-const BinanceService = {
+const RequestService = {
     getRP: (uri, headers) => {
         const options = {
             method: 'GET',
             uri: uri,
-            // qs: {} = {
-    
-            // },
             headers: headers,
-            json: true,
         }
         return RequestPromise(options);
     },
@@ -17,9 +13,10 @@ const BinanceService = {
         const options = {
             method: 'POST',
             uri: uri,
-            form: form, //binance requires this to be form not body...
+            form: form,
             headers: headers,
         };
+        console.log(options);
         return RequestPromise(options);
     },
     postBodyRP: (uri, body, headers) => {
@@ -28,33 +25,36 @@ const BinanceService = {
             uri: uri,
             body: body, 
             headers: headers,
+            json: true
         };
         return RequestPromise(options);
     },
-    putRP: (method, url) => {
+    putRP: (uri, body, headers) => {
         const options = {
-            method: '',
-            url: '',
-            headers: {},
+            method: 'PUT',
+            uri: uri,
+            body: body,
+            headers: headers,
         };
         return RequestPromise(options);
     },
-    deleteRP: (method, url) => {
+    deleteRP: (uri, body, headers) => {
         const options = {
-            method: '',
-            url: '',
-            headers: {},
+            method: 'DELETE',
+            uri: uri,
+            body: body,
+            headers: headers,
         };
         return RequestPromise(options);
     },
-    universalRP: (method, url) => {
-        const options = {
-            method: '',
-            url: '',
-            headers: {},
-        };
-        return RequestPromise(options);
-    },
+    // universalRP: (method, url) => {
+    //     const options = {
+    //         method: '',
+    //         uri: '',
+    //         headers: {},
+    //     };
+    //     return RequestPromise(options);
+    // },
 }
 
-module.exports = BinanceService;
+module.exports = RequestService;

@@ -14,16 +14,27 @@ app.listen(port, () => console.log(`App listening on port ${port}!`));
 setInterval( async () => console.log( await BinanceService.ping()), 5000); //ping biance server ever 5s
 setTimeout( async () => console.log( await BinanceService.time()), 5000); 
 
-// setTimeout( async () => {
-//     try {
-//         console.log( await BinanceService.postOrder('BTCUSDT', 'BUY', 'MARKET', 0.004));
-//         console.log('Order test');
-//     } catch (error) {
-//         console.log('Order error');
-//         // console.log(error);
-//         throw(error);
-//     }
-// }, 2000);
+setTimeout( async () => {
+    try {
+        console.log( await BinanceService.postLimitOrder('BTCUSDT', 'SELL', 0.004, 3950.0));
+        console.log('Order test');
+    } catch (error) {
+        console.log('Order error');
+        // console.log(error);
+        throw(error);
+    }
+}, 3000);
+
+setTimeout( async () => {
+    try {
+        console.log( await BinanceService.postMarketOrder('BTCUSDT', 'BUY', 0.004));
+        console.log('Order test');
+    } catch (error) {
+        console.log('Order error');
+        // console.log(error);
+        throw(error);
+    }
+}, 2000);
 
 // setTimeout( async () => {
 //     try {
@@ -80,15 +91,15 @@ setTimeout( async () => console.log( await BinanceService.time()), 5000);
 //         // throw(error);
 //     }
 // }, 2000);
-setTimeout( async () => {
-    try {
-        console.log( await BinanceService.getBookTop('BTCUSDT'));
-        console.log('Book top test');
-    } catch (error) {
-        console.log('Book top error');
-        // throw(error);
-    }
-}, 2000);
+// setTimeout( async () => {
+//     try {
+//         console.log( await BinanceService.getBookTop('BTCUSDT'));
+//         console.log('Book top test');
+//     } catch (error) {
+//         console.log('Book top error');
+//         // throw(error);
+//     }
+// }, 2000);
 
 setTimeout( () => {
     console.log('test2');
